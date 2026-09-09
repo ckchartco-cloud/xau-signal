@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="manifest" href="manifest.json">
+  <title>XAU Signal</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      background: #0b0f14;
+      color: #e8edf3;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Arial, sans-serif;
+    }
+
+    .app {
+      max-width: 600px;
+      margin: auto;
+      min-height: 100vh;
+      padding-bottom: 30px;
+    }
+
+    header {
+      padding: 18px 16px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 23px;
+      font-weight: 700;
+    }
+
+    .live {
+      font-size: 12px;
+      color: #38d996;
+    }
+
+    .price-box {
+      padding: 4px 16px 14px;
+    }
+
+    .price {
+      font-size: 34px;
+      font-weight: 700;
+    }
+
+    .change {
+      color: #38d996;
+      font-size: 14px;
+      margin-top: 3px;
+    }
+
+    .timeframes {
+      display: flex;
+      gap: 7px;
+      padding: 0 16px 14px;
+      overflow-x: auto;
+    }
+
+    .tf {
+      background: #151b23;
+      color: #9aa5b1;
+      border: 1px solid #242c37;
+      border-radius: 9px;
+      padding: 8px 13px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .tf.active {
+      color: white;
+      background: #26313e;
+      border-color: #526174;
+    }
+
+    .chart {
+      margin: 0 12px;
+      height: 330px;
+      border: 1px solid #202833;
+      border-radius: 12px;
+      background:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 50px 50px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .signal {
+      margin: 14px 12px;
+      padding: 16px;
+      background: #121820;
+      border: 1px solid #27313d;
+      border-radius: 12px;
+    }
+
+    .signal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .buy {
+      color: #38d996;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .score {
+      color: #cbd5df;
+      font-size: 13px;
+    }
+
+    .levels {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .level {
+      background: #0d1218;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .level-name {
+      color: #8995a3;
+      font-size: 11px;
+    }
+
+    .level-value {
+      margin-top: 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .analysis {
+      margin-top: 14px;
+      color: #aeb8c4;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .mtf {
+      margin: 14px 12px;
+      padding: 16px;
+      background: #121820;
+      border: 1px solid #27313d;
+      border-radius: 12px;
+    }
+
+    .mtf-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #202833;
+      font-size: 13px;
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .bull {
+      color: #38d996;
+    }
+
+    .bear {
+      color: #ff6675;
+    }
+
+    .note {
+      margin: 20px 16px;
+      color: #66717e;
+      font-size: 11px;
+      line-height: 1.5;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <header>
+    <div class="title">XAU Signal</div>
+    <div class="live">● LIVE</div>
+  </header>
+
+  <div class="price-box">
+    <div class="price">4,359.20</div>
+    <div class="change">+0.42%</div>
+  </div>
+
+  <div class="timeframes">
+    <button class="tf active">1M</button>
+    <button class="tf">5M</button>
+    <button class="tf">15M</button>
+    <button class="tf">30M</button>
+    <button class="tf">4H</button>
+  </div>
+
+  <div class="chart">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="signal">
+
+    <div class="signal-top">
+      <div class="buy">BUY SETUP</div>
+      <div class="score">Score 82/100</div>
+    </div>
+
+    <div class="levels">
+
+      <div class="level">
+        <div class="level-name">ENTRY</div>
+        <div class="level-value">4,359.20</div>
+      </div>
+
+      <div class="level">
+        <div class="level-name">SL</div>
+        <div class="level-value">4,353.70</div>
+      </div>
+
+      <div class="level">
+        <div class="level-name">TP1</div>
+        <div class="level-value">4,366.80</div>
+      </div>
+
+    </div>
+
+    <div class="analysis">
+      多周期趋势偏多，价格位于 EMA20/50 上方。
+      RSI 动能正常，MACD 保持多头结构。
+      当前波动率允许入场，建议等待价格确认后执行。
+    </div>
+
+  </div>
+
+  <div class="mtf">
+
+    <div class="mtf-title">Multi-Timeframe</div>
+
+    <div class="row">
+      <span>4H</span>
+      <span class="bull">BULLISH</span>
+    </div>
+
+    <div class="row">
+      <span>30M</span>
+      <span class="bull">BULLISH</span>
+    </div>
+
+    <div class="row">
+      <span>15M</span>
+      <span class="bull">BULLISH</span>
+    </div>
+
+    <div class="row">
+      <span>5M</span>
+      <span class="bull">SETUP</span>
+    </div>
+
+    <div class="row">
+      <span>1M</span>
+      <span class="bull">ENTRY</span>
+    </div>
+
+  </div>
+
+  <div class="note">
+    Prototype only. Market price, Entry, SL, TP and signals are currently demo values.
+    Live market data will be connected in the next stage.
+  </div>
+
+</div>
+
+<script>
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+  canvas.width = canvas.clientWidth * devicePixelRatio;
+  canvas.height = canvas.clientHeight * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  drawChart();
+}
+
+function drawChart() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+
+  ctx.clearRect(0, 0, w, h);
+
+  let price = h * 0.62;
+
+  for (let i = 0; i < 45; i++) {
+
+    const x = 8 + i * ((w - 20) / 45);
+    const move = (Math.random() - 0.44) * 28;
+
+    const open = price;
+    const close = price + move;
+
+    const high = Math.min(open, close) - Math.random() * 18;
+    const low = Math.max(open, close) + Math.random() * 18;
+
+    ctx.strokeStyle = "#7f8a98";
+    ctx.beginPath();
+    ctx.moveTo(x, high);
+    ctx.lineTo(x, low);
+    ctx.stroke();
+
+    ctx.fillStyle = close < open ? "#ff6675" : "#38d996";
+
+    const y = Math.min(open, close);
+    const height = Math.max(3, Math.abs(close - open));
+
+    ctx.fillRect(x - 3, y, 6, height);
+
+    price = close;
+  }
+
+  ctx.strokeStyle = "#38d996";
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(0, h * 0.43);
+  ctx.lineTo(w, h * 0.43);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+}
+
+window.addEventListener("resize", resize);
+resize();
+</script>
+
+</body>
+</html>
