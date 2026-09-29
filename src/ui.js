@@ -5,6 +5,17 @@ const formatR = (value) => Number.isFinite(value) ? `${value > 0 ? '+' : ''}${va
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
 const stateText = (language, state) => t(language, `gate.${state}`);
 const sessionStateKey = (state) => ({ 'Not in Session': 'notInSession', Waiting: 'waiting', Breakout: 'breakout', Retest: 'retest', Invalidated: 'invalidated' }[state] ?? 'waiting');
+const chineseGateReasons = {
+  feed: { pass: '最新价格与K线数据都在新鲜度范围内。', blocked: '实时价格或K线数据已过期；请等待新的数据更新。', waiting: '正在等待完整的市场数据。' },
+  trend4h: { pass: '4小时均线趋势已给出明确方向。', blocked: '4小时趋势不支持当前方向。', waiting: '正在等待明确的4小时均线趋势。' },
+  trend30m: { pass: '30分钟趋势与4小时方向一致。', blocked: '30分钟趋势与4小时方向冲突。', waiting: '正在等待明确的30分钟均线趋势。' },
+  trigger5m: { pass: '两根已收盘的5分钟K线确认了回调后的突破。', blocked: '5分钟触发方向与高周期趋势冲突。', waiting: '正在等待5分钟回调、突破和第二根收盘K线确认。' },
+  session: { pass: '当前时段确认亚洲区间的突破或回踩。', blocked: '当前不在可用时段，或时段方向与设定冲突。', waiting: '正在等待完整亚洲区间与时段确认。' },
+  volatility: { pass: 'ATR 处于设定的较安全范围内。', blocked: 'ATR 或最新K线异常，当前不满足波动率条件。', waiting: '正在等待完整的 ATR 数据。' },
+};
+const gateReason = (language, gate) => language === 'zh'
+  ? (chineseGateReasons[gate.id]?.[gate.state] ?? gate.reason)
+  : gate.reason;
 
 export function renderReadiness(root, decision, language) {
   if (!root || !decision) return;
@@ -13,12 +24,12 @@ export function renderReadiness(root, decision, language) {
   const levels = decision.levels ?? {};
   const gateRows = decision.gates.map((gate) => `<details class="gate gate-${escapeHtml(gate.state)}">
     <summary><span>${escapeHtml(t(language, `gate.${gate.id}`))}</span><b>${escapeHtml(stateText(language, gate.state))}</b></summary>
-    <p>${escapeHtml(gate.reason)}</p>
+    <p>${escapeHtml(gateReason(language, gate))}</p>
   </details>`).join('');
   root.innerHTML = `<section class="card readiness-card ${confirmed ? 'confirmed' : 'waiting'}" aria-live="polite">
     <div class="line"><div><small>${escapeHtml(t(language, 'readiness.title'))}</small><h2>${escapeHtml(t(language, 'readiness.setup'))}</h2></div><span class="state-pill">${escapeHtml(t(language, confirmed ? 'readiness.confirmed' : 'readiness.waiting'))}</span></div>
     <p class="readiness-count">${escapeHtml(t(language, 'readiness.gateCount', { passed, total: decision.gates.length }))}</p>
-    <p class="reason">${escapeHtml(decision.reason)}</p>
+    <p class="reason">${escapeHtml(confirmed ? (language === 'zh' ? '六项就绪条件均已通过。' : decision.reason) : gateReason(language, decision.gates.find((gate) => gate.state !== 'pass') ?? { id: 'feed', state: 'waiting', reason: decision.reason }))}</p>
     <div class="readiness-gates"><b>${escapeHtml(t(language, 'readiness.gates'))}</b>${gateRows}</div>
     <div class="levels"><div class="level"><small>${escapeHtml(t(language, 'level.entry'))}</small><b>${confirmed ? formatPrice(levels.entry) : '—'}</b></div><div class="level"><small>${escapeHtml(t(language, 'level.sl'))}</small><b>${confirmed ? formatPrice(levels.sl) : '—'}</b></div><div class="level"><small>${escapeHtml(t(language, 'level.tp'))}</small><b>${confirmed ? formatPrice(levels.tp) : '—'}</b></div></div>
     <p class="muted">${escapeHtml(confirmed ? t(language, 'readiness.closedOnly') : t(language, 'readiness.noLevels'))}</p>

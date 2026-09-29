@@ -17,7 +17,7 @@
       <div class="top-controls"><select id="language" class="language-select" aria-label="Language"><option value="en">English</option><option value="zh">中文</option></select><button id="alertBtn" class="alert" type="button">🔕 Alerts OFF</button></div>
     </header>
     <div id="price" class="price">—</div>
-    <div id="change" class="change">Loading market data…</div>
+    <div id="change" class="change" data-i18n="app.loading">Loading market data…</div>
     <div id="source" class="source">Source: Binance PAXG/USDT public market data proxy. It can differ from Vantage XAUUSD; it is not broker-tick or fill data.</div>
 
     <div id="readinessRoot"></div>
@@ -35,13 +35,13 @@
       </div>
       <section class="card chart-card"><div id="chart" class="chart" aria-label="Gold price chart"></div></section>
       <section class="card"><div class="line"><div id="signal" class="signal wait">● WAIT</div><span id="signalTf" class="muted">5m</span></div><div id="signalInfo" class="muted">Waiting for closed-candle data…</div><div id="error" class="error-text" role="alert"></div></section>
-      <section class="card"><div class="line"><b>Multi-timeframe context</b><span id="updated" class="muted">—</span></div><div id="mtf"></div></section>
+      <section class="card"><div class="line"><b data-i18n="app.mtf">Multi-timeframe context</b><span id="updated" class="muted">—</span></div><div id="mtf"></div></section>
     </section>
     <section id="patternsView" hidden><div id="patternsRoot"></div></section>
     <section id="sessionView" hidden><div id="sessionRoot"></div></section>
     <section id="reviewView" hidden><div id="reviewRoot"></div></section>
 
-    <p class="note">Educational prototype only. PAXG/USDT may differ from your broker’s XAU/USD feed. Signals are rules, not guarantees or financial advice.</p>
+    <p class="note" data-i18n="app.note">Educational prototype only. PAXG/USDT may differ from your broker’s XAU/USD feed. Signals are rules, not guarantees or financial advice.</p>
   </main>
   <script src="https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
   <script type="module" src="./src/app.js"></script>

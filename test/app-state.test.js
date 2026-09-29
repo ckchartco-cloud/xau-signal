@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEFAULT_SESSION_SCHEDULE } from '../src/sessions.js';
-import { buildAppState } from '../src/app.js';
+import { buildAppState, canNotify } from '../src/app.js';
 
 const now = new Date('2026-09-29T09:00:00Z');
 
@@ -45,4 +45,10 @@ test('buildAppState does not create a journal setup for WAIT', () => {
   const state = buildAppState({ ...confirmedInput, health: { fresh: false } });
   assert.equal(state.decision.state, 'waiting');
   assert.equal(state.review.rows.length, 0);
+});
+
+test('alerts only on a fresh confirmed transition and respect the ten-minute throttle', () => {
+  assert.equal(canNotify({ alertsOn: true, previousState: 'waiting', key: 'BUY-100', lastKey: '', lastAlertAt: 0, now: 600001 }), true);
+  assert.equal(canNotify({ alertsOn: true, previousState: 'confirmed', key: 'BUY-100', lastKey: '', lastAlertAt: 0, now: 600001 }), false);
+  assert.equal(canNotify({ alertsOn: true, previousState: 'waiting', key: 'BUY-101', lastKey: '', lastAlertAt: 1, now: 600000 }), false);
 });

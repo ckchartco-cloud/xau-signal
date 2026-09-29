@@ -1,5 +1,6 @@
 const requiredKeys = [
-  'app.title', 'app.language', 'source.proxy',
+  'app.title', 'app.language', 'app.alertOn', 'app.alertOff', 'app.loading', 'app.previousCandle', 'app.mtf', 'app.note', 'app.fresh', 'app.stale', 'source.proxy',
+  'status.CONNECTING', 'status.LOADING', 'status.LIVE', 'status.ERROR', 'status.TICK DISCONNECTED', 'status.CANDLE DISCONNECTED',
   'view.chart', 'view.patterns', 'view.session', 'view.review',
   'readiness.title', 'readiness.setup', 'readiness.confirmed', 'readiness.waiting', 'readiness.gateCount', 'readiness.gates', 'readiness.levels', 'readiness.noLevels', 'readiness.closedOnly',
   'gate.feed', 'gate.trend4h', 'gate.trend30m', 'gate.trigger5m', 'gate.session', 'gate.volatility', 'gate.pass', 'gate.waiting', 'gate.blocked',
@@ -7,12 +8,14 @@ const requiredKeys = [
   'session.title', 'session.utc', 'session.asiaRange', 'session.high', 'session.low', 'session.complete', 'session.incomplete', 'session.distance', 'session.state', 'session.custom', 'session.default', 'session.advanced', 'session.save', 'session.reset', 'session.notInSession', 'session.waiting', 'session.breakout', 'session.retest', 'session.invalidated',
   'review.title', 'review.localOnly', 'review.sampleWarning', 'review.total', 'review.completed', 'review.winRate', 'review.averageR', 'review.expired', 'review.open', 'review.filters', 'review.all', 'review.session', 'review.setup', 'review.direction', 'review.timeframe', 'review.noRows', 'review.outcome', 'review.r',
   'outcome.OPEN', 'outcome.WIN', 'outcome.LOSS', 'outcome.REVERSAL', 'outcome.EXPIRED', 'outcome.CLOSED',
+  'pattern.support', 'pattern.resistance', 'pattern.note', 'pattern.explanation', 'pattern.bullish', 'pattern.bearish', 'pattern.neutral',
 ];
 
 const messages = {
   en: {
-    app: { title: 'Gold Signal', language: 'Language' },
+    app: { title: 'Gold Signal', language: 'Language', alertOn: '🔔 Alerts ON', alertOff: '🔕 Alerts OFF', loading: 'Loading market data…', previousCandle: 'from previous candle', mtf: 'Multi-timeframe context', note: 'Educational prototype only. PAXG/USDT may differ from your broker’s XAU/USD feed. Signals are rules, not guarantees or financial advice.', fresh: 'Fresh', stale: 'Stale' },
     source: { proxy: 'Source: Binance PAXG/USDT public market data proxy. It can differ from Vantage XAUUSD; it is not broker-tick or fill data.' },
+    status: { CONNECTING: 'CONNECTING', LOADING: 'LOADING', LIVE: 'LIVE', ERROR: 'ERROR', 'TICK DISCONNECTED': 'TICK DISCONNECTED', 'CANDLE DISCONNECTED': 'CANDLE DISCONNECTED' },
     view: { chart: 'Chart', patterns: 'Patterns', session: 'Session', review: 'Review' },
     readiness: {
       title: 'Trade readiness', setup: 'Gold Trend + Session Breakout', confirmed: 'CONFIRMED', waiting: 'WAIT',
@@ -34,10 +37,12 @@ const messages = {
       filters: 'Filters', all: 'All', session: 'Session', setup: 'Setup', direction: 'Direction', timeframe: 'Timeframe', noRows: 'No local setups match these filters.', outcome: 'Outcome', r: 'R result',
     },
     outcome: { OPEN: 'Open', WIN: 'Win', LOSS: 'Loss', REVERSAL: 'Reversal', EXPIRED: 'Expired', CLOSED: 'Closed' },
+    pattern: { support: 'SUPPORT', resistance: 'RESISTANCE', note: 'Pattern results are heuristic estimates from recent candle geometry, not predictions or financial advice.', explanation: 'The pattern score is a heuristic based on recent closed-candle geometry.', bullish: 'BULLISH', bearish: 'BEARISH', neutral: 'NEUTRAL' },
   },
   zh: {
-    app: { title: '黄金信号', language: '语言' },
+    app: { title: '黄金信号', language: '语言', alertOn: '🔔 提醒已开启', alertOff: '🔕 提醒已关闭', loading: '正在加载市场数据…', previousCandle: '相对上一根K线', mtf: '多周期背景', note: '仅供学习的原型。PAXG/USDT 可能与您的经纪商 XAU/USD 报价不同。信号基于规则，不代表保证，也不是投资建议。', fresh: '新鲜', stale: '过期' },
     source: { proxy: '数据源：Binance PAXG/USDT 公开市场数据代理。它可能与 Vantage XAUUSD 报价不同，不是经纪商逐笔报价或成交数据。' },
+    status: { CONNECTING: '连接中', LOADING: '加载中', LIVE: '实时', ERROR: '错误', 'TICK DISCONNECTED': '实时价格断开', 'CANDLE DISCONNECTED': 'K线断开' },
     view: { chart: '图表', patterns: '形态', session: '交易时段', review: '复盘' },
     readiness: {
       title: '交易就绪度', setup: '黄金趋势 + 时段突破', confirmed: '已确认', waiting: '观望',
@@ -59,6 +64,7 @@ const messages = {
       filters: '筛选', all: '全部', session: '时段', setup: '策略', direction: '方向', timeframe: '周期', noRows: '没有本地信号符合这些筛选条件。', outcome: '结果', r: 'R 结果',
     },
     outcome: { OPEN: '进行中', WIN: '盈利', LOSS: '亏损', REVERSAL: '反转离场', EXPIRED: '过期', CLOSED: '已结束' },
+    pattern: { support: '支撑位', resistance: '阻力位', note: '形态结果是根据近期K线几何结构作出的启发式估计，不代表预测或投资建议。', explanation: '形态评分基于近期已收盘K线的几何结构。', bullish: '看涨', bearish: '看跌', neutral: '中性' },
   },
 };
 

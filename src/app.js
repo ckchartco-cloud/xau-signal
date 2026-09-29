@@ -12,11 +12,21 @@ const JOURNAL_KEY = 'xauReviewJournal';
 const ALERT_KEY = 'xauAlerts';
 const LANGUAGE_KEY = 'xauLanguage';
 const FRAME_LABELS = { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '4h': '4h' };
+const PATTERN_ZH = {
+  'Ascending triangle': '上升三角形', 'Descending triangle': '下降三角形', 'Double top': '双顶', 'Double bottom': '双底', 'Rising wedge': '上升楔形', 'Falling wedge': '下降楔形', 'Bull flag': '看涨旗形', 'Bear flag': '看跌旗形', 'Range / consolidation': '区间/盘整', 'No clear pattern': '没有明确形态', 'Waiting for candles…': '正在等待K线…',
+};
 
 export function buildAppState({ cache = {}, livePrice = null, health = {}, now = new Date(), schedule = DEFAULT_SESSION_SCHEDULE, journal = [], filters = {} } = {}) {
   const decision = evaluateReadiness({ cache, livePrice, dataHealth: health, now, schedule });
   const rows = decision.state === 'confirmed' ? recordConfirmedSetup(journal, decision) : migrateJournal(journal);
   return { decision, review: aggregateReview(rows, filters), journal: rows };
+}
+
+export function canNotify({ alertsOn, previousState, key, lastKey, lastAlertAt, now }) {
+  return Boolean(alertsOn)
+    && previousState !== 'confirmed'
+    && key !== lastKey
+    && now - lastAlertAt >= 10 * 60 * 1000;
 }
 
 const byId = (id) => document.getElementById(id);
@@ -57,6 +67,7 @@ export function bootApp() {
   let latestDecisionState = 'waiting';
   let lastConfirmedKey = '';
   let lastAlertKey = '';
+  let lastAlertAt = 0;
   let queued = false;
   const chart = createGoldChart(byId('chart'));
   const client = createMarketDataClient({
@@ -69,7 +80,7 @@ export function bootApp() {
 
   const setStatus = () => {
     const element = byId('status');
-    element.textContent = status;
+    element.textContent = t(language, `status.${status}`);
     element.className = `status${statusError ? ' error' : ''}`;
   };
   const persistJournal = () => write(JOURNAL_KEY, journal);
@@ -105,22 +116,26 @@ export function bootApp() {
   };
   const notifyConfirmed = (decision) => {
     const key = `${decision.side}-${decision.levels.entry}`;
-    if (!alertsOn || latestDecisionState === 'confirmed' || key === lastAlertKey) return;
+    const currentTime = Date.now();
+    if (!canNotify({ alertsOn, previousState: latestDecisionState, key, lastKey: lastAlertKey, lastAlertAt, now: currentTime })) return;
     lastAlertKey = key;
+    lastAlertAt = currentTime;
     const body = language === 'zh' ? `已确认 ${signalLabel(language, decision.side)}：六项条件均已通过。` : `Confirmed ${decision.side}: all six readiness gates pass.`;
     if ('Notification' in window && Notification.permission === 'granted') new Notification(t(language, 'app.title'), { body });
   };
   const renderPattern = () => {
     const root = byId('patternsRoot');
     const pattern = analyzePatterns(cache[selectedFrame] ?? []);
-    root.innerHTML = `<section class="card"><div class="line"><div><small>${selectedFrame}</small><h2>${pattern.best.name}</h2></div><span class="state-pill">${pattern.best.score}% · ${pattern.best.bias}</span></div><p class="reason">${pattern.best.reason}</p><div class="levels"><div class="level"><small>SUPPORT</small><b>${formatPrice(pattern.support)}</b></div><div class="level"><small>RESISTANCE</small><b>${formatPrice(pattern.resistance)}</b></div></div><div class="pattern-alternatives">${pattern.candidates.slice(1, 4).map((item) => `<div class="row"><span>${item.name}</span><span>${item.score}% · ${item.bias}</span></div>`).join('')}</div><p class="note">Pattern results are heuristic estimates from recent candle geometry, not predictions or financial advice.</p></section>`;
+    const name = (value) => language === 'zh' ? (PATTERN_ZH[value] ?? value) : value;
+    const bias = (value) => t(language, `pattern.${value === 'BULLISH' ? 'bullish' : value === 'BEARISH' ? 'bearish' : 'neutral'}`);
+    root.innerHTML = `<section class="card"><div class="line"><div><small>${selectedFrame}</small><h2>${name(pattern.best.name)}</h2></div><span class="state-pill">${pattern.best.score}% · ${bias(pattern.best.bias)}</span></div><p class="reason">${language === 'zh' ? t(language, 'pattern.explanation') : pattern.best.reason}</p><div class="levels"><div class="level"><small>${t(language, 'pattern.support')}</small><b>${formatPrice(pattern.support)}</b></div><div class="level"><small>${t(language, 'pattern.resistance')}</small><b>${formatPrice(pattern.resistance)}</b></div></div><div class="pattern-alternatives">${pattern.candidates.slice(1, 4).map((item) => `<div class="row"><span>${name(item.name)}</span><span>${item.score}% · ${bias(item.bias)}</span></div>`).join('')}</div><p class="note">${t(language, 'pattern.note')}</p></section>`;
   };
   const renderChart = (decision) => {
     const bars = cache[selectedFrame] ?? [];
     const price = livePrice ?? bars.at(-1)?.close;
     byId('price').textContent = formatPrice(price);
     const previous = bars.at(-2)?.close;
-    byId('change').textContent = Number.isFinite(previous) && Number.isFinite(price) ? `${((price / previous - 1) * 100).toFixed(2)}% from previous candle` : 'Loading market data…';
+    byId('change').textContent = Number.isFinite(previous) && Number.isFinite(price) ? `${((price / previous - 1) * 100).toFixed(2)}% ${t(language, 'app.previousCandle')}` : t(language, 'app.loading');
     const signal = byId('signal');
     signal.textContent = signalLabel(language, decision.side);
     signal.className = `signal ${decision.side.toLowerCase()}`;
@@ -148,8 +163,10 @@ export function bootApp() {
     }
     lastConfirmedKey = confirmedKey;
     latestDecisionState = decision.state;
-    byId('source').textContent = t(language, 'source.proxy');
-    byId('alertBtn').textContent = alertsOn ? '🔔 Alerts ON' : '🔕 Alerts OFF';
+    const health = client.health();
+    byId('source').textContent = `${t(language, 'source.proxy')} · ${t(language, health.fresh ? 'app.fresh' : 'app.stale')}`;
+    byId('alertBtn').textContent = t(language, alertsOn ? 'app.alertOn' : 'app.alertOff');
+    byId('alertBtn').classList.toggle('on', alertsOn);
     renderReadiness(byId('readinessRoot'), decision, language);
     renderChart(decision);
     renderPattern();
