@@ -1,9 +1,19 @@
-const CACHE_NAME = "xau-signal-v1";
+const CACHE_NAME = "xau-signal-v2";
 
 const FILES = [
   "./",
   "./index.html",
-  "./manifest.json"
+  "./manifest.json",
+  "./src/app.js",
+  "./src/chart.js",
+  "./src/data.js",
+  "./src/i18n.js",
+  "./src/indicators.js",
+  "./src/journal.js",
+  "./src/patterns.js",
+  "./src/sessions.js",
+  "./src/strategy.js",
+  "./src/ui.js"
 ];
 
 self.addEventListener("install", event => {
