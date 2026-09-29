@@ -1,6 +1,6 @@
 # EA-Style XAUUSD Analysis Design
 
-**Status:** Approved design; pending user review before implementation  
+**Status:** Approved design; implemented on the EA-style analysis branch  
 **Date:** 2026-09-29  
 **Scope:** Personal, mobile-first XAUUSD signal monitor hosted on GitHub Pages.
 
