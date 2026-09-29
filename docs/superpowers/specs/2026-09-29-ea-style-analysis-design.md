@@ -40,10 +40,10 @@ A setup is actionable only when every mandatory gate passes. A failing gate prod
 2. **4-hour trend** — EMA50/EMA200 and price agree on BUY or SELL bias.
 3. **30-minute trend filter** — direction agrees with the 4-hour bias.
 4. **5-minute trigger** — trend pullback plus closed-candle breakout/retest confirmation.
-5. **Session context** — London or New York active session, with an Asian-range breakout/retest if the session-breakout mode is enabled.
+5. **Session context** — London or New York must be active, and the active session must show a confirmed Asian-range breakout or retest. This is mandatory in phase one.
 6. **Volatility guard** — ATR is within the existing safer range and the latest closed candle is not an abnormal spike.
 
-The session clock uses UTC. Asia, London, and New York hours are configurable parameters with clearly labelled defaults so seasonal time changes can be adjusted without changing code.
+The session clock uses UTC. Default schedule: Asia range 00:00–06:00 UTC, London 07:00–11:00 UTC, and New York 13:00–17:00 UTC. An Advanced schedule card in the Session tab lets the user change these hours; values persist locally and every modified schedule is visibly labelled Custom.
 
 ## Mobile user experience
 
@@ -73,7 +73,7 @@ A new Session tab shows:
 
 The existing local paper journal evolves into a Review tab. It is explicitly local analysis, not a broker statement or historical backtest.
 
-New entries record the decision snapshot: timestamp, signal side, setup type, UTC session, gate results, entry, initial stop, target, and final outcome. Existing journal records remain readable; unavailable new fields display as Legacy rather than failing.
+New entries record the decision snapshot: timestamp, signal side, setup type, UTC session, gate results, entry, initial stop, target, and final outcome. R-result is measured from entry to outcome in units of initial risk; a stop-loss is -1R, while target and reversal use the actual exit movement divided by initial risk. Expiries remain distinct and are excluded from average-R figures. Existing journal records remain readable; unavailable new fields display as Legacy rather than failing.
 
 The analytics cards show:
 
@@ -111,7 +111,7 @@ Functions calculate data; rendering and storage consume that result. This avoids
 
 ## Data, alerts, and safety
 
-- Closed candles decide signals. The live tick only updates the price marker and evaluates an already-recorded paper setup.
+- Closed candles decide signals. The live tick only updates the price marker and evaluates an already-recorded paper setup. Feed freshness means the newest tick and candle are each less than 12 seconds old by default.
 - The source label always identifies the PAXG proxy, freshness age, and non-Vantage limitation.
 - An alert is allowed only on a transition into confirmed; it includes the setup and one blocking caveat if present. The ten-minute alert throttle remains.
 - All storage is local to the browser. Clearing the journal is explicit and does not affect price data or settings.
