@@ -29,6 +29,14 @@ export function canNotify({ alertsOn, previousState, key, lastKey, lastAlertAt, 
     && now - lastAlertAt >= 10 * 60 * 1000;
 }
 
+export function signalInfoText(language, decision) {
+  const gates = decision?.gates ?? [];
+  return t(language, 'readiness.gateCount', {
+    passed: gates.filter((gate) => gate.state === 'pass').length,
+    total: gates.length,
+  });
+}
+
 const byId = (id) => document.getElementById(id);
 const safeRead = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key) ?? '') ?? fallback; } catch { return fallback; }
@@ -140,7 +148,7 @@ export function bootApp() {
     signal.textContent = signalLabel(language, decision.side);
     signal.className = `signal ${decision.side.toLowerCase()}`;
     byId('signalTf').textContent = selectedFrame;
-    byId('signalInfo').textContent = `${decision.gates.filter((gate) => gate.state === 'pass').length} / 6 gates pass · ${decision.source}`;
+    byId('signalInfo').textContent = signalInfoText(language, decision);
     byId('updated').textContent = new Date().toLocaleTimeString(language === 'zh' ? 'zh-CN' : 'en-GB');
     byId('mtf').innerHTML = ['4h', '30m', '5m'].map((frame) => {
       const side = trendForBars((cache[frame] ?? []).slice(0, -1));
